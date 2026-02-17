@@ -11,7 +11,7 @@ This project implements an end-to-end data pipeline that:
 - Implements retry handling
 - Tracks pipeline execution using system audit tables
 
-The pipeline is built using Python and Google BigQuery.
+The pipeline is built using Python and Google BigQuery and follows production-grade data engineering best practices.
 
 ---
 
@@ -65,21 +65,22 @@ randomuser_pipeline/
 
 ## 🔐 Authentication Handling
 
-- Uses Google Service Account JSON key
+- Uses Google Service Account JSON key.
 - Authentication handled via:
 
 ```python
 service_account.Credentials.from_service_account_file(...)
 ```
 
-- Access tokens are automatically refreshed by Google SDK
-- No manual token handling required
+- Access tokens are automatically refreshed by Google SDK.
+- No manual token management required.
 
 ---
 
 ## 🌐 API Ingestion
 
 API Used:
+
 ```
 https://randomuser.me/api/?results=100&seed=easytest
 ```
@@ -88,6 +89,7 @@ Features:
 - Retry handling with exponential backoff
 - Network failure handling
 - 5xx response handling
+- Config-driven API parameters
 
 ---
 
@@ -153,7 +155,7 @@ The schema was normalized into 7 relational tables.
 
 ### Primary Key Strategy
 
-The `login.uuid` field from the API is used as the primary key (`user_id`) across all tables to maintain referential integrity.
+The `login.uuid` field from the API is used as the primary key (`user_id`) across all tables to maintain referential integrity and ensure idempotency.
 
 ---
 
@@ -161,7 +163,7 @@ The `login.uuid` field from the API is used as the primary key (`user_id`) acros
 
 To ensure safe re-runs:
 
-1. Data is loaded into a staging table
+1. Data is first loaded into a staging table.
 2. A BigQuery MERGE statement is executed:
 
 ```sql
@@ -177,6 +179,7 @@ This guarantees:
 - No duplicate records
 - Safe pipeline re-execution
 - Data consistency
+- Update capability if data changes
 
 ---
 
@@ -206,7 +209,7 @@ Tracks execution metrics:
 - records_loaded
 - timestamp
 
-System tables use APPEND logic to preserve historical runs.
+System tables use APPEND logic to preserve historical pipeline runs.
 
 ---
 
@@ -220,29 +223,36 @@ The pipeline logs:
 - Execution time
 - Errors (if any)
 
-Row counts are logged during each MERGE operation to validate idempotency.
+Row counts are logged during each MERGE operation to validate idempotency and data consistency.
 
 ---
 
 ## 🚀 How to Run Locally
 
-### 1️⃣ Install Dependencies
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/Shaktigupta931/randomuser-data-pipeline.git
+cd randomuser-data-pipeline
+```
+
+### 2️⃣ Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2️⃣ Place Service Account File
+### 4️⃣ Add Service Account Key
 
-Put the Service Account JSON inside:
+Place your Google Cloud service account JSON file inside:
 
 ```
 credentials/service_account.json
 ```
 
-### 3️⃣ Run the Pipeline
+⚠️ Note: The credentials folder is excluded from Git for security reasons.
 
-From project root:
+### 5️⃣ Run the Pipeline
 
 ```bash
 python3 -m src.main
@@ -252,14 +262,14 @@ python3 -m src.main
 
 ## ☁️ Automation Strategy
 
-The pipeline can be automated using any cloud platform. Below are recommended approaches:
+The pipeline can be automated using the following approaches:
 
 ### Option 1: Cloud Run + Cloud Scheduler (Recommended)
 
-1. Containerize the application using Docker
-2. Push the image to Google Artifact Registry
-3. Deploy the container to Cloud Run
-4. Use Cloud Scheduler to trigger execution on a schedule
+1. Containerize the application using Docker.
+2. Push the Docker image to Google Artifact Registry.
+3. Deploy the container to Cloud Run.
+4. Use Cloud Scheduler to trigger execution on a schedule.
 
 Benefits:
 - Serverless
@@ -271,10 +281,10 @@ Benefits:
 
 ### Option 2: GitHub Actions + GCP
 
-1. Store repository in GitHub
-2. Create workflow YAML
-3. Authenticate using service account secret
-4. Trigger pipeline on schedule or push
+1. Store repository in GitHub.
+2. Create a workflow YAML file.
+3. Authenticate using service account secrets.
+4. Trigger pipeline on schedule or on push.
 
 Benefits:
 - CI/CD integration
@@ -288,8 +298,8 @@ Benefits:
 - Modular architecture
 - Config-driven pipeline
 - Service account authentication
-- Retry handling
-- Idempotent MERGE loading
+- Retry handling with exponential backoff
+- Idempotent MERGE loading strategy
 - Normalized relational schema
 - System audit and metrics tracking
 - Automation-ready design
@@ -315,6 +325,6 @@ This project demonstrates production-grade data engineering practices including:
 
 - Clean modular architecture
 - Idempotent data loading
-- Observability
-- Secure authentication
-- Scalable automation design
+- Observability through audit tables
+- Secure authentication handling
+- Scalable automation-ready design
