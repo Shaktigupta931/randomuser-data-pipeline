@@ -1,0 +1,10 @@
+project_id: devx-tsc
+dataset_name: sample_dataset_4
+
+api:
+  url: "https://randomuser.me/api/?results=100&seed=easytest"
+  timeout: 30
+  retries: 3
+
+bigquery:
+  location: "asia-south1"
